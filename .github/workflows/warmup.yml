@@ -19,12 +19,13 @@ jobs:
       - name: Install Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code
 
-      - name: Ping account 1
+      - name: Ping all accounts
         env:
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_OAUTH_TOKEN_1 }}
-        run: claude -p "ok" --model haiku
-
-      - name: Ping account 2
-        env:
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_OAUTH_TOKEN_2 }}
-        run: claude -p "ok" --model haiku
+          CLAUDE_TOKENS: ${{ secrets.CLAUDE_TOKENS }}
+        run: |
+          i=1
+          echo "$CLAUDE_TOKENS" | jq -r '.[]' | while read -r token; do
+            echo "=== Pinging account $i ==="
+            CLAUDE_CODE_OAUTH_TOKEN="$token" claude -p "ok" --model haiku || echo "Account $i failed, continuing..."
+            i=$((i+1))
+          done
